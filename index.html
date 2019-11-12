@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>API tester</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+
+    <form id="form-test-api" class="container">
+        <div class="row">
+            <div class="col-4 form-group">
+                <label for="input-uri">URL de la API a probar</label>
+                <input type="text" id="input-uri" class="form-control" placeholder="ejem: http://mydomain.com/api/" required></input>
+            </div>
+            <div class="col-3 form-group">
+                <label>Selecciona el metodo de envio</label>
+                <select id="input-method" class="form-control" required>
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="HEAD">HEAD</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="OPTIONS">OPTIONS</option>
+                </select>
+            </div>
+
+            <div class="col-5 form-group">
+                <label>Modo de peticion</label>
+                <div class="form-check form-check-inline" id="input-api-use">
+                    <input class="form-check-input" id="input-request-fetch" type="radio" name="request" value="fetch" checked>
+                    <label class="form-check-label" for="input-request-fetch">Async - fetch()</label>
+                    &nbsp;
+                    &nbsp;
+                    <input class="form-check-input" id="input-request-ajax" type="radio" name="request" value="ajax" checked>
+                    <label class="form-check-label" for="input-request-ajax">Async - $.ajax()</label>
+                    &nbsp;
+                    &nbsp;
+                    <input class="form-check-input" id="input-request2" type="radio" name="request" value="form">
+                    <label class="form-check-label" for="input-request2">Local Form</label>
+                </div>
+            </div>
+
+            <div class="col-12 form-group">
+                <label>Definir tipo de contenido:</label>
+                <input type="text" id="input-type-content" class="form-control" placeholder="ejem: application/json">
+            </div>
+
+            <div class="col-12">
+                <hr>
+            </div>
+
+            <div class="col-6" id="added-headers-box">
+                
+                <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 20px">
+                    <span><b>Headers:</b></span>
+                    <div class="d-block text-right">
+                        <button class="btn btn-link">Agregar Header</button>
+                    </div>
+                </div>
+                <div class="row item" template>
+                    <div class="col-5">
+                        <input type="text" name="key" placeholder="Escribe el indice" class="form-control" required>
+                    </div>
+                    <div class="col-5">
+                        <input type="text" name="value" placeholder="Escribe el valor del indice" class="form-control" required>
+                    </div>
+                    <div class="col-2 text-center">
+                        <button class="btn btn-danger">&times;</button>
+                    </div>
+                    <div class="col-12"><hr></div>
+                </div>
+            </div>
+
+            <div class="col-6" id="added-inputs-box">
+                <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 20px">
+                    <span><b>Contenido:</b></span>
+                    <div class="d-block text-right">
+                        <button class="btn btn-link">Agregar contenido</button>
+                    </div>
+                </div>
+
+                <div class="row item" template>
+                    <div class="col-5">
+                        <input type="text" name="key" placeholder="Escribe el indice" class="form-control" required>
+                    </div>
+                    <div class="col-5">
+                        <input type="text" name="value" placeholder="Escribe el valor del indice" class="form-control" required>
+                    </div>
+                    <div class="col-2 text-center">
+                        <button class="btn btn-danger">&times;</button>
+                    </div>
+                    <div class="col-12"><hr></div>
+                </div>
+            </div>
+
+            <div class="col-12 text-center">
+                <hr>
+                <button type="submit" class="btn btn-success">Procesar</button>
+                <button class="btn btn-primary" status data-action="save-status">Guardar estado</button>
+                <button class="btn btn-warning" status data-action="load-status">Cargar estado</button>
+            </div>
+        </div>
+    </form>
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+        const Form = $("#form-test-api");
+
+        function ProcessForm (event) {
+            var MAIN_OBJ;
+
+            function getDynamicContents (selector) {
+                var newObj = {};
+
+                $(selector).each(function () {
+                    const getKey = $(this).find('input[name="key"]');
+                    const getValue = $(this).find('input[name="value"]');
+
+                    newObj[getKey.val()] = getValue.val();
+                });
+
+                return newObj;
+            }
+
+            MAIN_OBJ = {
+                url: $('#input-uri').val(),
+                method: $('#input-method').val(),
+                apiUse: $("#input-api-use input[type='radio']:checked").val(),
+                typeContent: $("#input-type-content").val(),
+                headers: getDynamicContents("#added-headers-box .item"),
+                data: getDynamicContents("#added-inputs-box .item")
+            };
+
+            if (MAIN_OBJ.apiUse === 'ajax') {
+                $.ajax({
+                    "url": MAIN_OBJ.url,
+                    "data": JSON.stringify(MAIN_OBJ.data),
+                    "type": MAIN_OBJ.method,
+                    "contentType": MAIN_OBJ.contentType
+
+                }).then(function (a, b, c) {
+                    console.log(a, b, c);
+
+                }).fail(function (err) {
+                    console.log(err);
+                });
+                event.preventDefault();
+
+            } else if (MAIN_OBJ.apiUse === 'fetch') {
+                fetch(MAIN_OBJ.url, {
+                    "method": MAIN_OBJ.method,
+                    "headers": MAIN_OBJ.headers,
+                    "body": JSON.stringify(MAIN_OBJ.data)
+                })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(err => console.log(err));
+                event.preventDefault();
+
+            } else if (MAIN_OBJ.apiUse === 'form') {
+                Form.attr('action', MAIN_OBJ.url);
+                Form.attr('method', MAIN_OBJ.method);
+                // event.preventDefault();
+            } else {
+                event.preventDefault();
+            }
+        }
+
+        function addedContentsInputs (selector) {
+            const Element = $(selector);
+            var Template = Element.find('[template]').clone();
+
+            // Remover el template, para dar la apariencia de que no hay agregados
+            Element.find('[template]').remove();
+
+            // Agregar eventos al boton, para agregar template
+            Element.find('button.btn-link').on('click', event => {
+                Element.append(Template[0].outerHTML);
+                event.preventDefault();
+            });
+
+            // Agregar evento al boton para eliminar elemento agregado
+            Element.on('click', '.btn-danger', function (event) {
+                $(this).parents('.item').remove();
+                event.preventDefault();
+            });
+
+        }
+
+        function statusController (event) {
+            const Element = $(this);
+            const getStatusAction = Element.attr('data-action');
+
+            if (getStatusAction === 'save-status') {
+                function getDynamicContents (selector) {
+                    var newObj = {};
+
+                    $(selector).each(function () {
+                        const getKey = $(this).find('input[name="key"]');
+                        const getValue = $(this).find('input[name="value"]');
+
+                        newObj[getKey.val()] = getValue.val();
+                    });
+
+                    return newObj;
+                }
+
+                let data = {
+                    url: $('#input-uri').val(),
+                    method: $('#input-method').val(),
+                    apiUse: $("#input-api-use input[type='radio']:checked").val(),
+                    typeContent: $("#input-type-content").val(),
+                    headers: getDynamicContents("#added-headers-box .item"),
+                    data: getDynamicContents("#added-inputs-box .item")
+                };
+
+                localStorage.setItem('dataForm', JSON.stringify(data));
+                alert("Se a guardado el estado con exito");
+
+            } else if (getStatusAction === 'load-status' && "dataForm" in localStorage) {
+                let dataForm = JSON.parse(localStorage.dataForm);
+
+                $('#input-uri').val(dataForm.url);
+                $('#input-method').val(dataForm.method);
+                $("#input-api-use input[value='" + dataForm.apiUse + "']").prop('checked', true);
+                $("#input-type-content").val(dataForm.typeContent);
+
+                if (Object.keys(dataForm.headers).length) {
+                    let inx = 0;
+                    for(let key in dataForm.headers) {
+                        document.querySelector('#added-headers-box .btn-link').click();
+                        let Item = $("#added-headers-box .item").eq(inx);
+                        Item.find('input[name="key"]').val(key);
+                        Item.find('input[name="value"]').val(dataForm.headers[key]);
+                        inx += 1;
+                    }
+                }
+
+                if (Object.keys(dataForm.data).length) {
+                    let inx = 0;
+                    for(let key in dataForm.data) {
+                        document.querySelector('#added-inputs-box .btn-link').click();
+                        let Item = $("#added-inputs-box .item").eq(inx);
+                        Item.find('input[name="key"]').val(key);
+                        Item.find('input[name="value"]').val(dataForm.data[key]);
+                        inx += 1;
+                    }
+                }
+
+                alert("Se ha cargado el estado.");
+
+            } else if ("dataForm" in localStorage) {
+                alert('No hay datos para cargar en el estado.');
+            }
+            
+            event.preventDefault();
+        }
+
+        Form.on('submit', ProcessForm);
+        $('[status]').on('click', statusController);
+        addedContentsInputs("#added-headers-box");
+        addedContentsInputs("#added-inputs-box");
+    </script>
+
+</body>
+</html>
